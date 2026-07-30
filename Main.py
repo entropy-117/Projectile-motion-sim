@@ -6,7 +6,7 @@ from pygame_widgets.textbox import TextBox
 
 class Main:
 
-    WIDTH = 1000
+    WIDTH = 1200
     HEIGHT = 700
     FPS = 60
     BACKGROUND = (30, 30, 30)
@@ -39,7 +39,7 @@ class Main:
 
         # Create one projectile
         self.Projectile = Projectile(
-            x=100,
+            x=50,
             y=self.ground,
             speed=self.SPEED,
             angle=self.ANGLE,
@@ -62,7 +62,7 @@ class Main:
                 if event.key == pygame.K_SPACE:
 
                     self.Projectile = Projectile(
-                        x=100,
+                        x=50,
                         y=self.ground,
                         speed=self.SPEED,
                         angle=self.ANGLE,
@@ -100,6 +100,15 @@ class Main:
         )
 
         self.Projectile.draw(self.screen)
+
+        # Ball position display
+        display_y = self.ground - self.Projectile.y
+        position_text = self.font.render(
+        f"X: {int(self.Projectile.x - 50)}  Y: {int(display_y)}",
+        True,
+        (255, 255, 255)
+        )
+        self.screen.blit(position_text, (750, 20))
 
         self.angle_label.setText(str(int(self.angle_slider.getValue())))
         self.speed_label.setText(str(int(self.speed_slider.getValue())))
