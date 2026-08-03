@@ -4,7 +4,7 @@ import pygame
 
 class Projectile:
 
-    def __init__(self, x, y, speed, angle, ground):
+    def __init__(self, x, y, speed, angle, ground, gravity):
 
         self.x = x
         self.y = y
@@ -15,7 +15,7 @@ class Projectile:
         self.vx = speed * math.cos(radians)
         self.vy = -speed * math.sin(radians)
 
-        self.gravity = 500
+        self.gravity = gravity
 
         self.radius = 8
 
@@ -24,13 +24,15 @@ class Projectile:
     def update(self, dt):
 
         self.vy += self.gravity * dt
+
         self.x += self.vx * dt
         self.y += self.vy * dt
 
+        # Stop at ground level
         if self.y >= self.ground:
             self.y = self.ground
-            self.vy = 0
             self.vx = 0
+            self.vy = 0
 
         self.path.append((self.x, self.y))
 

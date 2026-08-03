@@ -2,33 +2,24 @@ import pygame
 from projectile import Projectile
 import pygame_widgets
 from pygame_widgets.slider import Slider
-from pygame_widgets.textbox import TextBox    
+from pygame_widgets.textbox import TextBox
+
 
 class Main:
 
-    WIDTH = 1200
+    WIDTH = 1000
     HEIGHT = 700
     FPS = 60
     BACKGROUND = (30, 30, 30)
-    ANGLE = 60
-    SPEED = 400
+    PIXELS_PER_METER = 50
 
     def __init__(self):
         pygame.init()
 
-        self.font = pygame.font.SysFont(None, 28)
-
         self.screen = pygame.display.set_mode((self.WIDTH, self.HEIGHT))
-
-        self.angle_slider = Slider(self.screen, 50, 20, 200, 20, min=1, max=90, step=1, initial=60)
-        self.angle_label = TextBox(self.screen, 260, 15, 50, 30, fontSize=18, colour=(30, 30, 30), textColour=(255, 255, 255), borderColour=(0, 0, 0))
-        self.angle_label.disable()
-
-        self.speed_slider = Slider(self.screen, 350, 20, 200, 20, min=0, max=1200, step=10, initial=400)
-        self.speed_label = TextBox(self.screen, 560, 15, 60, 30, fontSize=18,colour=(30, 30, 30),textColour=(255, 255, 255))
-        self.speed_label.disable()
-
         pygame.display.set_caption("Projectile Motion Simulator")
+
+        self.font = pygame.font.SysFont(None, 28)
 
         self.clock = pygame.time.Clock()
 
@@ -37,13 +28,47 @@ class Main:
         # Ground position
         self.ground = 650
 
+        # Angle slider
+        self.angle_slider = Slider(self.screen, 50, 20, 200, 20, min=1, max=180, step=1, initial=60)
+        self.angle_label = TextBox(
+            self.screen, 260, 15, 60, 30,
+            fontSize=18,
+            colour=(30, 30, 30),
+            textColour=(255, 255, 255),
+            borderColour=(200, 200, 200)
+        )
+        self.angle_label.disable()
+
+        # Speed slider (shown in m/s, converted to pixels/s internally)
+        self.speed_slider = Slider(self.screen, 350, 20, 200, 20, min=1, max=20, step=1, initial=10)
+        self.speed_label = TextBox(
+            self.screen, 560, 15, 60, 30,
+            fontSize=18,
+            colour=(30, 30, 30),
+            textColour=(255, 255, 255),
+            borderColour=(200, 200, 200)
+        )
+        self.speed_label.disable()
+
+        # Gravity slider (shown in m/s^2, converted to pixels/s^2 internally)
+        self.gravity_slider = Slider(self.screen, 650, 20, 200, 20, min=1, max=25, step=1, initial=10)
+        self.gravity_label = TextBox(
+            self.screen, 860, 15, 60, 30,
+            fontSize=18,
+            colour=(30, 30, 30),
+            textColour=(255, 255, 255),
+            borderColour=(200, 200, 200)
+        )
+        self.gravity_label.disable()
+
         # Create one projectile
         self.Projectile = Projectile(
-            x=50,
+            x=100,
             y=self.ground,
-            speed=self.SPEED,
-            angle=self.ANGLE,
-            ground = self.ground
+            speed=self.speed_slider.getValue() * self.PIXELS_PER_METER,
+            angle=self.angle_slider.getValue(),
+            ground=self.ground,
+            gravity=self.gravity_slider.getValue() * self.PIXELS_PER_METER
         )
 
     def events(self):
@@ -62,11 +87,12 @@ class Main:
                 if event.key == pygame.K_SPACE:
 
                     self.Projectile = Projectile(
-                        x=50,
+                        x=100,
                         y=self.ground,
-                        speed=self.SPEED,
-                        angle=self.ANGLE,
-                        ground = self.ground
+                        speed=self.speed_slider.getValue() * self.PIXELS_PER_METER,
+                        angle=self.angle_slider.getValue(),
+                        ground=self.ground,
+                        gravity=self.gravity_slider.getValue() * self.PIXELS_PER_METER
                     )
 
     def update(self, dt):
@@ -81,10 +107,13 @@ class Main:
 
         # Category labels below sliders
         angle_caption = self.font.render("Angle", True, (255, 255, 255))
-        self.screen.blit(angle_caption, (125, 50))
+        self.screen.blit(angle_caption, (50, 45))
 
         speed_caption = self.font.render("Speed", True, (255, 255, 255))
-        self.screen.blit(speed_caption, (425, 50))
+        self.screen.blit(speed_caption, (350, 45))
+
+        gravity_caption = self.font.render("Gravity (m/s^2)", True, (255, 255, 255))
+        self.screen.blit(gravity_caption, (650, 45))
 
         # Instructions
         instructions = self.font.render("Press SPACE to launch", True, (255, 255, 255))
@@ -101,17 +130,19 @@ class Main:
 
         self.Projectile.draw(self.screen)
 
-        # Ball position display
+        # Ball position display (0 at ground, increasing upward)
         display_y = self.ground - self.Projectile.y
         position_text = self.font.render(
-        f"X: {int(self.Projectile.x - 50)}  Y: {int(display_y)}",
-        True,
-        (255, 255, 255)
+            f"X: {int(self.Projectile.x)}  Y: {int(display_y)}",
+            True,
+            (255, 255, 255)
         )
-        self.screen.blit(position_text, (750, 20))
+        self.screen.blit(position_text, (50, 75))
 
+        # Slider value labels
         self.angle_label.setText(str(int(self.angle_slider.getValue())))
         self.speed_label.setText(str(int(self.speed_slider.getValue())))
+        self.gravity_label.setText(str(int(self.gravity_slider.getValue())))
 
         pygame_widgets.update(self.event_list)
 
@@ -124,8 +155,6 @@ class Main:
 
             dt = self.clock.tick(self.FPS) / 1000
 
-            self.SPEED = self.speed_slider.getValue()
-            self.ANGLE = self.angle_slider.getValue()
             self.events()
             self.update(dt)
             self.draw()
