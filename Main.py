@@ -3,6 +3,7 @@ from projectile import Projectile
 import pygame_widgets
 from pygame_widgets.slider import Slider
 from pygame_widgets.textbox import TextBox
+from pygame_widgets.button import Button
 
 
 class Main:
@@ -24,6 +25,8 @@ class Main:
         self.clock = pygame.time.Clock()
 
         self.running = True
+
+        self.state = "menu"
 
         # Ground position
         self.ground = 650
@@ -70,6 +73,89 @@ class Main:
             ground=self.ground,
             gravity=self.gravity_slider.getValue() * self.PIXELS_PER_METER
         )
+        self.start_button = Button(
+            self.screen, 400, 300, 200, 60,
+            text="Start",
+            fontSize=30,
+            inactiveColour=(70, 70, 70),
+            hoverColour=(100, 100, 100),
+            pressedColour=(50, 150, 50),
+            radius=10,
+            onClick=self.start_simulation
+        )
+
+        self.quit_button = Button(
+            self.screen, 400, 380, 200, 60,
+            text="Quit",
+            fontSize=30,
+            inactiveColour=(70, 70, 70),
+            hoverColour=(100, 100, 100),
+            pressedColour=(150, 50, 50),
+            radius=10,
+            onClick=self.quit_game
+        )
+
+        self.menu_button = Button(
+            self.screen, 20, 660, 100, 30,
+            text="Menu",
+            fontSize=18,
+            inactiveColour=(70, 70, 70),
+            hoverColour=(100, 100, 100),
+            pressedColour=(150, 50, 50),
+            radius=6,
+            onClick=self.go_to_menu
+        )
+
+        # Start hidden in menu state — simulation widgets shouldn't show yet
+        self.angle_slider.hide()
+        self.angle_label.hide()
+        self.speed_slider.hide()
+        self.speed_label.hide()
+        self.gravity_slider.hide()
+        self.gravity_label.hide()
+        self.menu_button.hide()
+
+
+    def start_simulation(self):
+        self.state = "simulation"
+
+        self.angle_slider.show()
+        self.angle_label.show()
+        self.speed_slider.show()
+        self.speed_label.show()
+        self.gravity_slider.show()
+        self.gravity_label.show()
+        self.menu_button.show()
+
+        self.start_button.hide()
+        self.quit_button.hide()
+
+        # Reset the projectile to a clean starting state
+        self.Projectile = Projectile(
+            x=100,
+            y=self.ground,
+            speed=self.speed_slider.getValue(),
+            angle=self.angle_slider.getValue(),
+            ground=self.ground,
+            gravity=self.gravity_slider.getValue() * self.PIXELS_PER_METER
+        )
+
+    def go_to_menu(self):
+        self.state = "menu"
+
+        self.angle_slider.hide()
+        self.angle_label.hide()
+        self.speed_slider.hide()
+        self.speed_label.hide()
+        self.gravity_slider.hide()
+        self.gravity_label.hide()
+        self.menu_button.hide()
+
+        self.start_button.show()
+        self.quit_button.show()
+
+    def quit_game(self):
+        self.running = False
 
     def events(self):
         """Handle all user input."""
@@ -84,7 +170,7 @@ class Main:
             if event.type == pygame.KEYDOWN:
 
                 # Restart projectile
-                if event.key == pygame.K_SPACE:
+                if event.key == pygame.K_SPACE and self.state == "simulation":
 
                     self.Projectile = Projectile(
                         x=100,
@@ -98,51 +184,58 @@ class Main:
     def update(self, dt):
         """Update game objects."""
 
-        self.Projectile.update(dt)
+        if self.state == "simulation":
+            self.Projectile.update(dt)
 
     def draw(self):
         """Draw everything."""
 
         self.screen.fill(self.BACKGROUND)
 
-        # Category labels below sliders
-        angle_caption = self.font.render("Angle", True, (255, 255, 255))
-        self.screen.blit(angle_caption, (50, 45))
+        if self.state == "menu":
+            title = self.font.render("Projectile Motion Simulator", True, (255, 255, 255))
+            self.screen.blit(title, (self.WIDTH // 2 - 150, 200))
 
-        speed_caption = self.font.render("Speed", True, (255, 255, 255))
-        self.screen.blit(speed_caption, (350, 45))
+        elif self.state == "simulation":
 
-        gravity_caption = self.font.render("Gravity (m/s^2)", True, (255, 255, 255))
-        self.screen.blit(gravity_caption, (650, 45))
+            # Category labels below sliders
+            angle_caption = self.font.render("Angle", True, (255, 255, 255))
+            self.screen.blit(angle_caption, (50, 45))
 
-        # Instructions
-        instructions = self.font.render("Press SPACE to launch", True, (255, 255, 255))
-        self.screen.blit(instructions, (self.WIDTH // 2 - 100, self.HEIGHT - 40))
+            speed_caption = self.font.render("Speed", True, (255, 255, 255))
+            self.screen.blit(speed_caption, (350, 45))
 
-        # Draw ground
-        pygame.draw.line(
-            self.screen,
-            (200, 200, 200),
-            (0, self.ground),
-            (self.WIDTH, self.ground),
-            2
-        )
+            gravity_caption = self.font.render("Gravity (m/s^2)", True, (255, 255, 255))
+            self.screen.blit(gravity_caption, (650, 45))
 
-        self.Projectile.draw(self.screen)
+            # Instructions
+            instructions = self.font.render("Press SPACE to launch", True, (255, 255, 255))
+            self.screen.blit(instructions, (self.WIDTH // 2 - 100, self.HEIGHT - 40))
 
-        # Ball position display (0 at ground, increasing upward)
-        display_y = self.ground - self.Projectile.y
-        position_text = self.font.render(
-            f"X: {int(self.Projectile.x)}  Y: {int(display_y)}",
-            True,
-            (255, 255, 255)
-        )
-        self.screen.blit(position_text, (50, 75))
+            # Draw ground
+            pygame.draw.line(
+                self.screen,
+                (200, 200, 200),
+                (0, self.ground),
+                (self.WIDTH, self.ground),
+                2
+            )
 
-        # Slider value labels
-        self.angle_label.setText(str(int(self.angle_slider.getValue())))
-        self.speed_label.setText(str(int(self.speed_slider.getValue())))
-        self.gravity_label.setText(str(int(self.gravity_slider.getValue())))
+            self.Projectile.draw(self.screen)
+
+            # Ball position display (0 at ground, increasing upward)
+            display_y = self.ground - self.Projectile.y
+            position_text = self.font.render(
+                f"X: {int(self.Projectile.x)}  Y: {int(display_y)}",
+                True,
+                (255, 255, 255)
+            )
+            self.screen.blit(position_text, (50, 75))
+
+            # Slider value labels
+            self.angle_label.setText(str(int(self.angle_slider.getValue())))
+            self.speed_label.setText(str(int(self.speed_slider.getValue())))
+            self.gravity_label.setText(str(int(self.gravity_slider.getValue())))
 
         pygame_widgets.update(self.event_list)
 
