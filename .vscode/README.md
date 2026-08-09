@@ -13,7 +13,7 @@ height, time of flight).
 - Menu screen with Start/Quit, and a way to return to the menu mid-session
 
 ## Demo
-![demo gif](demo.gif)
+![demo gif](demoAnimation.gif)
 
 ## Installation
 ```bash
