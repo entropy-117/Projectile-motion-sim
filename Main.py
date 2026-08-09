@@ -223,6 +223,15 @@ class Main:
 
             self.Projectile.draw(self.screen)
 
+            if self.Projectile.landed:
+                range_m = (self.Projectile.x - self.Projectile.start_x) / self.PIXELS_PER_METER
+                height_m = self.Projectile.max_height / self.PIXELS_PER_METER
+                time_s = self.Projectile.time_elapsed
+
+                stats_text = self.font.render(f"Range: {range_m:.1f} m   Max Height: {height_m:.1f} m   Time: {time_s:.2f} s", True, (255, 255, 255)) 
+
+                self.screen.blit(stats_text, (50, self.HEIGHT - 70))
+
             # Ball position display (0 at ground, increasing upward)
             display_y = self.ground - self.Projectile.y
             position_text = self.font.render(

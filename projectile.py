@@ -10,6 +10,11 @@ class Projectile:
         self.y = y
         self.ground = ground
 
+        self.start_x = x
+        self.max_height = 0
+        self.time_elapsed = 0
+        self.landed = False
+
         radians = math.radians(angle)
 
         self.vx = speed * math.cos(radians)
@@ -23,16 +28,27 @@ class Projectile:
 
     def update(self, dt):
 
+        if self.landed:
+            return  # nothing left to track once it's down
+
+        self.time_elapsed += dt
+
         self.vy += self.gravity * dt
 
         self.x += self.vx * dt
         self.y += self.vy * dt
+
+        # Track how high above the ground it's gotten
+        current_height = self.ground - self.y
+        if current_height > self.max_height:
+            self.max_height = current_height
 
         # Stop at ground level
         if self.y >= self.ground:
             self.y = self.ground
             self.vx = 0
             self.vy = 0
+            self.landed = True
 
         self.path.append((self.x, self.y))
 
